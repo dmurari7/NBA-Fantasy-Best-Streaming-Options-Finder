@@ -4,12 +4,10 @@ from datetime import date, timedelta
 import pandas as pd
 
 today = date.today()
-
-test_date_to = '12/15/2024'  
-test_date_from = '11/15/2024'  
+thirty_days_ago = today - timedelta(days = 30)
 
 scoreboard = ScoreboardV2(game_date=today.strftime('%m/%d/%Y'))
-player_logs = PlayerGameLogs(season_nullable='2024-25', date_from_nullable=test_date_from, date_to_nullable=test_date_to)
+player_logs = PlayerGameLogs(season_nullable='2025-26', date_from_nullable=thirty_days_ago.strftime('%m/%d/%Y'), date_to_nullable=today.strftime('%m/%d/%Y'))
 
 games_df = scoreboard.get_data_frames()[0]
 players_df = player_logs.get_data_frames()[0]
@@ -19,5 +17,7 @@ visitor_team_ids = games_df['VISITOR_TEAM_ID']
 
 team_ids = pd.concat([home_team_ids, visitor_team_ids]).unique().tolist()
 
-print(team_ids)
-print(players_df.head())
+#print(team_ids)
+#print(players_df.head())
+
+print(players_df[players_df['TEAM_ID'].isin(team_ids)])
