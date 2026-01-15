@@ -20,4 +20,9 @@ team_ids = pd.concat([home_team_ids, visitor_team_ids]).unique().tolist()
 #print(team_ids)
 #print(players_df.head())
 
-print(players_df[players_df['TEAM_ID'].isin(team_ids)])
+todays_players_logs = players_df[players_df['TEAM_ID'].isin(team_ids)]
+todays_players_avgs = todays_players_logs.groupby(['PLAYER_ID', 'PLAYER_NAME']).agg({'MIN':'mean', 'PTS':'mean'}).reset_index()
+
+print(todays_players_avgs.sort_values('PTS', ascending=False))
+
+
