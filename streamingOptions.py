@@ -26,7 +26,7 @@ todays_players_df = agg_stats_for_players.reset_index()
 todays_streamable_players = todays_players_df[(todays_players_df['MIN'] >= 15) & (todays_players_df['MIN'] <= 25)].copy()
 
 # Rename columns
-todays_streamable_players.columns = ['PLAYER_ID', 'PLAYER_NAME', 'TEAM_ABBREVIATION', 'AVG_MIN', 'AVG_PTS']
+todays_streamable_players.columns = ['PLAYER_ID', 'PLAYER_NAME', 'TEAM', 'AVG_MIN', 'AVG_PTS']
 
 # Round decimals
 todays_streamable_players['AVG_MIN'] = todays_streamable_players['AVG_MIN'].round(1)
