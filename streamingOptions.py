@@ -19,12 +19,28 @@ team_ids = pd.concat([home_team_ids, visitor_team_ids]).unique().tolist()
 
 todays_players_30day_game_logs = players_df[players_df['TEAM_ID'].isin(team_ids)]
 
-todays_players_grouped_logs = todays_players_30day_game_logs.groupby(['PLAYER_ID', 'PLAYER_NAME'])
+todays_players_grouped_logs = todays_players_30day_game_logs.groupby(['PLAYER_ID', 'PLAYER_NAME', 'TEAM_ABBREVIATION'])
 agg_stats_for_players = todays_players_grouped_logs.agg({'MIN':'mean', 'PTS':'mean'})
 todays_players_df = agg_stats_for_players.reset_index()
 
-todays_streamable_players = todays_players_df[(todays_players_df['MIN'] >= 15) & (todays_players_df['MIN'] <= 25)]
+todays_streamable_players = todays_players_df[(todays_players_df['MIN'] >= 15) & (todays_players_df['MIN'] <= 25)].copy()
 
-print(todays_streamable_players.sort_values('PTS', ascending=False))
+# Rename columns
+todays_streamable_players.columns = ['PLAYER_ID', 'PLAYER_NAME', 'TEAM_ABBREVIATION', 'AVG_MIN', 'AVG_PTS']
+
+# Round decimals
+todays_streamable_players['AVG_MIN'] = todays_streamable_players['AVG_MIN'].round(1)
+todays_streamable_players['AVG_PTS'] = todays_streamable_players['AVG_PTS'].round(1)
+
+# Select columns to display
+final_output = todays_streamable_players[['PLAYER_NAME', 'TEAM', 'AVG_MIN', 'AVG_PTS']]
+final_output = final_output.sort_values('AVG_PTS', ascending=False)
+
+# Display
+print("\n" + "="*60)
+print("TOP STREAMING OPTIONS FOR TODAY")
+print("="*60)
+print(final_output.to_string(index=False))
+print("="*60)
 
 
