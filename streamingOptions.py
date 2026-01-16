@@ -17,12 +17,14 @@ visitor_team_ids = games_df['VISITOR_TEAM_ID']
 
 team_ids = pd.concat([home_team_ids, visitor_team_ids]).unique().tolist()
 
-#print(team_ids)
-#print(players_df.head())
+todays_players_30day_game_logs = players_df[players_df['TEAM_ID'].isin(team_ids)]
 
-todays_players_logs = players_df[players_df['TEAM_ID'].isin(team_ids)]
-todays_players_avgs = todays_players_logs.groupby(['PLAYER_ID', 'PLAYER_NAME']).agg({'MIN':'mean', 'PTS':'mean'}).reset_index()
+todays_players_grouped_logs = todays_players_30day_game_logs.groupby(['PLAYER_ID', 'PLAYER_NAME'])
+agg_stats_for_players = todays_players_grouped_logs.agg({'MIN':'mean', 'PTS':'mean'})
+todays_players_df = agg_stats_for_players.reset_index()
 
-print(todays_players_avgs.sort_values('PTS', ascending=False))
+todays_streamable_players = todays_players_df[(todays_players_df['MIN'] >= 15) & (todays_players_df['MIN'] <= 25)]
+
+print(todays_streamable_players.sort_values('PTS', ascending=False))
 
 
