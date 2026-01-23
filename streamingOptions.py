@@ -2,9 +2,13 @@ from nba_api.stats.endpoints import ScoreboardV2
 from nba_api.stats.endpoints import PlayerGameLogs
 from datetime import date, timedelta
 import pandas as pd
+import requests
 
 today = date.today()
 thirty_days_ago = today - timedelta(days = 30)
+
+rotowire_url = "https://www.rotowire.com/basketball/injury-report.php"
+rotowire_html = requests.get(rotowire_url).text
 
 scoreboard = ScoreboardV2(game_date=today.strftime('%m/%d/%Y'))
 player_logs = PlayerGameLogs(season_nullable='2025-26', date_from_nullable=thirty_days_ago.strftime('%m/%d/%Y'), date_to_nullable=today.strftime('%m/%d/%Y'))
