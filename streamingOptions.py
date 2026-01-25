@@ -2,13 +2,10 @@ from nba_api.stats.endpoints import ScoreboardV2
 from nba_api.stats.endpoints import PlayerGameLogs
 from datetime import date, timedelta
 import pandas as pd
-import requests
+from injury_scraper import get_injury_report
 
 today = date.today()
 thirty_days_ago = today - timedelta(days = 30)
-
-rotowire_url = "https://www.rotowire.com/basketball/injury-report.php"
-rotowire_html = requests.get(rotowire_url).text
 
 scoreboard = ScoreboardV2(game_date=today.strftime('%m/%d/%Y'))
 player_logs = PlayerGameLogs(season_nullable='2025-26', date_from_nullable=thirty_days_ago.strftime('%m/%d/%Y'), date_to_nullable=today.strftime('%m/%d/%Y'))
@@ -44,7 +41,17 @@ todays_streamable_players['AVG_REB'] = todays_streamable_players['AVG_REB'].roun
 final_output = todays_streamable_players[['PLAYER_NAME', 'TEAM', 'AVG_MIN', 'AVG_PTS', 'AVG_AST', 'AVG_STL', 'AVG_BLK', 'AVG_REB']]
 final_output = final_output.sort_values('AVG_PTS', ascending=False)
 
-# Display
+injury_df = get_injury_report()
+
+#injury report display
+print("\n" + "="*60)
+print("INJURY REPORT")
+print("="*60)
+print(injury_df.head(10).to_string(index=False))
+print(f"\nTotal injured players: {len(injury_df)}")
+print("="*60)
+
+# Display streaming options
 print("\n" + "="*60)
 print("TOP STREAMING OPTIONS FOR TODAY")
 print("="*60)
