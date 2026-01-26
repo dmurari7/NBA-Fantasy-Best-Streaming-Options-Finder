@@ -4,6 +4,11 @@ from datetime import date, timedelta
 import pandas as pd
 from injury_scraper import get_injury_report
 
+def clean_name(name):
+    name = name.lower().strip()
+    name = name.replace(' jr.', '').replace(' sr.', '').replace(' iii', '').replace(' ii', '')
+    return name
+
 today = date.today()
 thirty_days_ago = today - timedelta(days = 30)
 
@@ -37,25 +42,38 @@ todays_streamable_players['AVG_STL'] = todays_streamable_players['AVG_STL'].roun
 todays_streamable_players['AVG_BLK'] = todays_streamable_players['AVG_BLK'].round(1)
 todays_streamable_players['AVG_REB'] = todays_streamable_players['AVG_REB'].round(1)
 
-# Select columns to display
-final_output = todays_streamable_players[['PLAYER_NAME', 'TEAM', 'AVG_MIN', 'AVG_PTS', 'AVG_AST', 'AVG_STL', 'AVG_BLK', 'AVG_REB']]
-final_output = final_output.sort_values('AVG_PTS', ascending=False)
-
 injury_df = get_injury_report()
 
-#injury report display
-print("\n" + "="*60)
-print("INJURY REPORT")
-print("="*60)
-print(injury_df.head(10).to_string(index=False))
-print(f"\nTotal injured players: {len(injury_df)}")
-print("="*60)
+injury_df['PLAYER_NAME_CLEAN'] = injury_df['PLAYER_NAME'].apply(clean_name)
+todays_streamable_players['PLAYER_NAME_CLEAN'] = todays_streamable_players['PLAYER_NAME'].apply(clean_name)
+
+# Merge injury status into streamable players
+todays_streamable_players = todays_streamable_players.merge(
+    injury_df[['PLAYER_NAME_CLEAN', 'INJURY_STATUS']], 
+    on='PLAYER_NAME_CLEAN', 
+    how='left'
+)
+
+# Filter out players who are "Out"
+todays_streamable_players = todays_streamable_players[
+    (todays_streamable_players['INJURY_STATUS'].isna()) |  # Not on injury report
+    (~todays_streamable_players['INJURY_STATUS'].isin(['Out']))  # Or not Out
+]
+
+# Optional: Flag questionable players with a visual indicator
+todays_streamable_players['STATUS_FLAG'] = todays_streamable_players['INJURY_STATUS'].apply(
+    lambda x: '⚠️' if pd.notna(x) and x in ['Questionable', 'Doubtful'] else ''
+)
+
+# Select columns to display
+final_output = todays_streamable_players[['PLAYER_NAME', 'TEAM', 'AVG_MIN', 'AVG_PTS', 'AVG_AST', 'AVG_STL', 'AVG_BLK', 'AVG_REB','STATUS_FLAG']]
+final_output = final_output.sort_values('AVG_PTS', ascending=False)
 
 # Display streaming options
-print("\n" + "="*60)
+print("\n" + "="*84)
 print("TOP STREAMING OPTIONS FOR TODAY")
-print("="*60)
+print("="*84)
 print(final_output.to_string(index=False))
-print("="*60)
+print("="*84)
 
 
