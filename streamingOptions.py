@@ -26,13 +26,22 @@ team_ids = pd.concat([home_team_ids, visitor_team_ids]).unique().tolist()
 todays_players_30day_game_logs = players_df[players_df['TEAM_ID'].isin(team_ids)]
 
 todays_players_grouped_logs = todays_players_30day_game_logs.groupby(['PLAYER_ID', 'PLAYER_NAME', 'TEAM_ABBREVIATION'])
-agg_stats_for_players = todays_players_grouped_logs.agg({'MIN':'mean', 'PTS':'mean', 'AST':'mean','STL':'mean', 'BLK':'mean', 'REB':'mean'})
+agg_stats_for_players = todays_players_grouped_logs.agg({'MIN':'mean', 'PTS':'mean', 'AST':'mean','STL':'mean', 'BLK':'mean', 'REB':'mean', 'TOV':'mean'})
 todays_players_df = agg_stats_for_players.reset_index()
 
 todays_streamable_players = todays_players_df[(todays_players_df['MIN'] >= 15) & (todays_players_df['MIN'] <= 25)].copy()
 
 # Rename columns
-todays_streamable_players.columns = ['PLAYER_ID', 'PLAYER_NAME', 'TEAM', 'AVG_MIN', 'AVG_PTS', 'AVG_AST', 'AVG_STL', 'AVG_BLK', 'AVG_REB']
+todays_streamable_players.columns = ['PLAYER_ID', 'PLAYER_NAME', 'TEAM', 'AVG_MIN', 'AVG_PTS', 'AVG_AST', 'AVG_STL', 'AVG_BLK', 'AVG_REB', 'AVG_TOV']
+
+SCORING = {
+    'PTS': 1.0,
+    'AST': 2.0,
+    'REB': 1.0,
+    'STL': 4.0,
+    'BLK': 4.0,
+    'TOV': -2.0  
+}
 
 # Round decimals
 todays_streamable_players['AVG_MIN'] = todays_streamable_players['AVG_MIN'].round(1)
@@ -41,6 +50,19 @@ todays_streamable_players['AVG_AST'] = todays_streamable_players['AVG_AST'].roun
 todays_streamable_players['AVG_STL'] = todays_streamable_players['AVG_STL'].round(1)
 todays_streamable_players['AVG_BLK'] = todays_streamable_players['AVG_BLK'].round(1)
 todays_streamable_players['AVG_REB'] = todays_streamable_players['AVG_REB'].round(1)
+todays_streamable_players['AVG_TOV'] = todays_streamable_players['AVG_TOV'].round(1)
+
+todays_streamable_players['FANTASY_PTS'] = (
+    todays_streamable_players['AVG_PTS'] * SCORING['PTS'] +
+    todays_streamable_players['AVG_AST'] * SCORING['AST'] +
+    todays_streamable_players['AVG_REB'] * SCORING['REB'] +
+    todays_streamable_players['AVG_STL'] * SCORING['STL'] +
+    todays_streamable_players['AVG_BLK'] * SCORING['BLK'] +
+    todays_streamable_players['AVG_TOV'] * SCORING['TOV'] 
+)
+
+# Round fantasy points to 1 decimal place
+todays_streamable_players['FANTASY_PTS'] = todays_streamable_players['FANTASY_PTS'].round(1)
 
 injury_df = get_injury_report()
 
@@ -66,14 +88,25 @@ todays_streamable_players['STATUS_FLAG'] = todays_streamable_players['INJURY_STA
 )
 
 # Select columns to display
-final_output = todays_streamable_players[['PLAYER_NAME', 'TEAM', 'AVG_MIN', 'AVG_PTS', 'AVG_AST', 'AVG_STL', 'AVG_BLK', 'AVG_REB','STATUS_FLAG']]
-final_output = final_output.sort_values('AVG_PTS', ascending=False)
+final_output = todays_streamable_players[[
+    'PLAYER_NAME', 
+    'TEAM',
+    'FANTASY_PTS', 
+    'AVG_MIN', 
+    'AVG_PTS', 
+    'AVG_AST', 
+    'AVG_STL', 
+    'AVG_BLK', 
+    'AVG_REB',
+    'STATUS_FLAG'
+]]
+final_output = final_output.sort_values('FANTASY_PTS', ascending=False)
 
 # Display streaming options
-print("\n" + "="*84)
-print("TOP STREAMING OPTIONS FOR TODAY")
-print("="*84)
+print("\n" + "="*80)
+print("TOP STREAMING OPTIONS FOR TODAY (Ranked by Fantasy Points)")
+print("="*80)
 print(final_output.to_string(index=False))
-print("="*84)
+print("="*80)
 
 
